@@ -48,6 +48,7 @@ async function fetchSites(sitesCount: number): Promise<Site[]> {
           tag: result.tag,
           failedReason: result.failedReason || null,
           lastManualCheck: result.lastManualCheck || null,
+          // 绝不生成 favicon URL，太费性能了
           icon: ``
         });
       }
@@ -63,58 +64,115 @@ async function fetchSites(sitesCount: number): Promise<Site[]> {
 const sites: Site[] = await fetchSites(10); // 获取10个站点作为示例
 ---
 
-<div class="Site-list">
-  {sites.map((site) => (
-    <div class="Site-card">
-      <a href={site.url} target="_blank" rel="noopener noreferrer" class="Site-link">
-        <div class="Site-icon">
-          <img src={`https://www.travellings.cn/assets/favicon.png`} alt={site.name} onerror="this.style.display='none'" />
+<div class="Site-container">
+  <div class="Site-list-wrapper">
+    <div class="Site-list">
+      <!-- 重复站点列表以实现无缝循环 -->
+      {Array.from({ length: 3 }, () => sites).flat().map((site, index) => (
+        <div class="Site-card">
+          <a href={site.url} target="_blank" rel="noopener noreferrer" class="Site-link">
+            <div class="Site-icon">
+              {/* // 绝不生成 favicon URL，太费性能了 */}
+              <img src={'https://www.travellings.cn/assets/favicon.png'} alt={site.name} onerror="this.style.display='none'" />
+            </div>
+            <div class="Site-info">
+              <h3 class="Site-name">{site.name}</h3>
+              <p class="Site-tag">{site.tag}</p>
+            </div>
+          </a>
         </div>
-        <div class="Site-info">
-          <h3 class="Site-name">{site.name}</h3>
-          <p class="Site-tag">{site.tag}</p>
-        </div>
-      </a>
+      ))}
     </div>
-  ))}
+  </div>
 </div>
 
+<script>
+  import { animate } from "animejs";
+
+  document.addEventListener("DOMContentLoaded", () => {
+    const siteListElement = document.querySelector(".Site-list") as HTMLElement | null;
+    if (!siteListElement) return;
+
+    // 获取站点数量（从DOM元素计算）
+    const siteCards = siteListElement.querySelectorAll(".Site-card");
+    const sitesCount = siteCards.length / 3; // 除以3是因为我们重复了3次列表
+
+    // 获取单个卡片的宽度（包括margin）
+    const cardWidth = 300 + 24; // 卡片宽度300px + 间距24px
+    
+    // 计算一组卡片的总宽度
+    const setWidth = sitesCount * cardWidth;
+
+    // 执行动画
+    animate(".Site-list", {
+      translateX: -setWidth,
+      duration: 15000,
+      easing: "linear",
+      loop: true,
+    });
+  });
+</script>
+
 <style>
+  .Site-container {
+    overflow: hidden;
+    position: relative;
+    width: 100%;
+    height: 200px;
+    margin: 2rem 0;
+  }
+
+  .Site-list-wrapper {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+  }
+
   .Site-list {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 1rem;
-    padding: 1rem 0;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    padding: 0 1.5rem;
+    height: 100%;
+    position: absolute;
+    left: 0;
+    width: fit-content;
+    flex-wrap: nowrap;
   }
 
   .Site-card {
-    border: 1px solid #eaeaea;
-    border-radius: 8px;
+    border: 1px solid #333;
+    border-radius: 12px;
     overflow: hidden;
-    transition: all 0.2s ease;
-    background: white;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    background: #1e1e1e;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    min-width: 300px;
+    flex-shrink: 0;
+    will-change: transform;
   }
 
   .Site-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+    transform: translateY(-6px);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.5);
     border-color: #3498db;
   }
 
   .Site-link {
     display: flex;
     align-items: center;
-    padding: 1rem;
+    padding: 1.5rem;
     text-decoration: none;
-    color: inherit;
+    color: #e0e0e0;
+    height: 100%;
   }
 
   .Site-icon {
     flex-shrink: 0;
-    width: 48px;
-    height: 48px;
-    margin-right: 1rem;
+    width: 64px;
+    height: 64px;
+    margin-right: 1.5rem;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -123,7 +181,7 @@ const sites: Site[] = await fetchSites(10); // 获取10个站点作为示例
   .Site-icon img {
     max-width: 100%;
     max-height: 100%;
-    border-radius: 4px;
+    border-radius: 6px;
   }
 
   .Site-info {
@@ -132,10 +190,10 @@ const sites: Site[] = await fetchSites(10); // 获取10个站点作为示例
   }
 
   .Site-name {
-    margin: 0 0 0.25rem 0;
-    font-size: 1.1rem;
+    margin: 0 0 0.5rem 0;
+    font-size: 1.3rem;
     font-weight: 600;
-    color: #333;
+    color: #e0e0e0;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -143,30 +201,38 @@ const sites: Site[] = await fetchSites(10); // 获取10个站点作为示例
 
   .Site-tag {
     margin: 0;
-    font-size: 0.85rem;
-    color: #666;
+    font-size: 1rem;
+    color: #aaa;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
 
   @media (max-width: 768px) {
-    .Site-list {
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-      gap: 0.75rem;
+    .Site-container {
+      height: 180px;
+    }
+    
+    .Site-card {
+      min-width: 250px;
     }
     
     .Site-link {
-      padding: 0.75rem;
+      padding: 1rem;
     }
     
     .Site-icon {
-      width: 40px;
-      height: 40px;
+      width: 48px;
+      height: 48px;
+      margin-right: 1rem;
     }
     
     .Site-name {
-      font-size: 1rem;
+      font-size: 1.1rem;
+    }
+    
+    .Site-tag {
+      font-size: 0.9rem;
     }
   }
 </style>
