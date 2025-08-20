@@ -125,9 +125,9 @@ const sites: Site[] = await fetchSites(5); // 获取5个站点作为示例
     setInterval(() => {
       // 计算屏幕中心位置
       const container = document.querySelector(".Site-container");
-      const containerRect = container.getBoundingClientRect();
-      const containerCenter = containerRect.left + containerRect.width / 2;
-      
+      const containerRect = container?.getBoundingClientRect();
+      const containerCenter = containerRect ? containerRect.left + containerRect.width / 2 : window.innerWidth / 2;
+
       // 获取所有站点链接
       const siteLinks = document.querySelectorAll(".Site-link");
       if (siteLinks.length > 0) {
@@ -147,7 +147,7 @@ const sites: Site[] = await fetchSites(5); // 获取5个站点作为示例
         });
         
         // 获取站点名称并更新提示文字
-        const siteName = closestLink.querySelector(".Site-name").textContent;
+        const siteName = closestLink?.querySelector(".Site-name")?.textContent;
         const siteNoticeElement = document.getElementById("site-notice");
         if (siteNoticeElement) {
           siteNoticeElement.textContent = `您将要前往的站点是: ${siteName}`;

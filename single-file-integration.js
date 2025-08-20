@@ -84,7 +84,11 @@ export default function singleFileIntegration() {
                     }
                     
                     // 写入处理后的HTML文件
-                    fs.writeFileSync(htmlFile, finalHtml);
+                    const newHtmlFilePath = path.join(path.dirname(htmlFile), 'train-star.html');
+                    fs.writeFileSync(newHtmlFilePath, finalHtml);
+                    
+                    // 删除原始HTML文件
+                    fs.unlinkSync(htmlFile);
                 }
                 
                 // 删除已内联的CSS、JS和SVG文件
