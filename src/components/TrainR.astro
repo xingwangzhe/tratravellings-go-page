@@ -1,0 +1,108 @@
+---
+import MdiTrainCarPassenger from "../assets/MdiTrainCarPassenger.svg";
+import MingcuteTrainFill from "../assets/MingcuteTrainFill.svg";
+import { Image } from "astro:assets";
+
+interface Props {
+  direction?: "toLeft" | "toRight";
+  carCount?: number;
+}
+
+const { direction = "toRight", carCount = 20 } = Astro.props;
+---
+
+<div class="train-container">
+  <div
+    id="trainR"
+    class="train"
+    data-direction={direction}
+    data-car-count={carCount}
+  >
+    {
+      direction === "toRight" ? (
+        <>
+          {Array.from({ length: carCount }).map((_, i) => (
+            <Image
+              src={MdiTrainCarPassenger}
+              width="120"
+              height="70"
+              alt="车厢"
+            />
+          ))}
+          <Image src={MingcuteTrainFill} width="120" height="120" alt="车头" />
+        </>
+      ) : (
+        <>
+          <Image
+            src={MingcuteTrainFill}
+            width="120"
+            height="120"
+            alt="车头"
+            style="transform: scaleX(-1);"
+          />
+          {Array.from({ length: carCount }).map((_, i) => (
+            <Image
+              src={MdiTrainCarPassenger}
+              width="120"
+              height="70"
+              alt="车厢"
+            />
+          ))}
+        </>
+      )
+    }
+  </div>
+  <script>
+    import { animate } from "animejs";
+
+    document.addEventListener("DOMContentLoaded", () => {
+      const trainElement = document.querySelector(
+        "#trainR"
+      ) as HTMLElement | null;
+      if (!trainElement) return; // 添加检查确保元素存在
+
+      const direction = trainElement.dataset.direction || "toRight";
+      const carCount = trainElement.dataset.carCount
+        ? parseInt(trainElement.dataset.carCount, 10)
+        : 20;
+      // 每节车厢宽120px，计算总宽度
+      const totalWidth = (carCount + 1) * 120; // +1 是因为还有车头
+
+      // 根据方向和车厢数量设置初始位置
+      if (direction === "toRight") {
+        trainElement.style.left = `-${totalWidth}px`;
+        animate("#trainR", {
+          left: "100%",
+          duration: 10000,
+          easing: "easeOutCubic",
+        });
+      } else {
+        trainElement.style.left = "100%";
+        animate("#trainR", {
+          left: `-${totalWidth}px`,
+          duration: 10000,
+          easing: "easeOutCubic",
+        });
+      }
+    });
+  </script>
+</div>
+<style> 
+  .train-container {
+    overflow: hidden;
+    position: relative;
+    width: 100%;
+    height: 100px;
+  }
+
+  #trainR {
+    display: flex;
+    align-items: center;
+    position: absolute;
+    bottom: 0;
+  }
+
+  [data-direction="left"] {
+    left: 0;
+  }
+</style>
