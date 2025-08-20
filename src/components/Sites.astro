@@ -87,11 +87,11 @@ const sites: Site[] = await fetchSites(5); // 获取5个站点作为示例
   <div class="Site-notice" id="site-notice">您将要前往的站点是...</div>
 </div>
 
-<script>
-  import { animate } from "animejs";
+<script type="module">
+  import { animate } from 'https://cdn.jsdelivr.net/npm/animejs/+esm';
 
   document.addEventListener("DOMContentLoaded", () => {
-    const siteListElement = document.querySelector("[data-site-list]") as HTMLElement | null;
+    const siteListElement = document.querySelector("[data-site-list]") ;
     const siteNoticeElement = document.getElementById("site-notice");
     if (!siteListElement || !siteNoticeElement) return;
 
@@ -132,7 +132,7 @@ const sites: Site[] = await fetchSites(5); // 获取5个站点作为示例
       const siteLinks = document.querySelectorAll(".Site-link");
       if (siteLinks.length > 0) {
         // 找到离屏幕中心最近的站点
-        let closestLink = siteLinks[0] as HTMLAnchorElement;
+        let closestLink = siteLinks[0];
         let closestDistance = Infinity;
         
         siteLinks.forEach((link) => {
@@ -142,7 +142,7 @@ const sites: Site[] = await fetchSites(5); // 获取5个站点作为示例
           
           if (distance < closestDistance) {
             closestDistance = distance;
-            closestLink = link as HTMLAnchorElement;
+            closestLink = link;
           }
         });
         

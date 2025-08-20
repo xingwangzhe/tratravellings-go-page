@@ -55,13 +55,13 @@ const { direction = "toRight", carCount = 20 } = Astro.props;
       )
     }
   </div>
-  <script>
-    import { animate } from "animejs";
+  <script type="module">
+    import { animate } from 'https://cdn.jsdelivr.net/npm/animejs/+esm';
 
     document.addEventListener("DOMContentLoaded", () => {
       const trainElement = document.querySelector(
         "#trainR"
-      ) as HTMLElement | null;
+      ) 
       if (!trainElement) return; // 添加检查确保元素存在
 
       const direction = trainElement.dataset.direction || "toRight";
