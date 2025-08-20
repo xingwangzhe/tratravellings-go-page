@@ -138,29 +138,35 @@
       
       // 应用图标容器样式
       iconDiv.style.flexShrink = '0';
-      iconDiv.style.width = '60px';
+      iconDiv.style.width = '100px';
       iconDiv.style.height = '60px';
       iconDiv.style.marginRight = '1.5rem';
       iconDiv.style.display = 'flex';
+      iconDiv.style.flexDirection = 'column';
       iconDiv.style.alignItems = 'center';
       iconDiv.style.justifyContent = 'center';
+      iconDiv.style.background = '#d4af37'; // 金色背景
+      iconDiv.style.borderRadius = '8px';
+      iconDiv.style.fontWeight = 'bold';
+      iconDiv.style.fontSize = '24px';
+      iconDiv.style.color = '#000'; // 黑色文字
 
-      // 创建图标图片
-      const iconImg = document.createElement('img');
-      iconImg.src = 'https://www.travellings.cn/assets/favicon.png';
-      iconImg.alt = site.name;
+      // 创建ID标签
+      const idLabel = document.createElement('span');
+      idLabel.textContent = 'ID';
+      idLabel.style.fontSize = '10px';
+      idLabel.style.fontWeight = 'normal';
+      idLabel.style.color = '#000';
+      idLabel.style.lineHeight = '1';
       
-      // 应用图标图片样式
-      iconImg.style.maxWidth = '100%';
-      iconImg.style.maxHeight = '100%';
-      iconImg.style.borderRadius = '8px';
-      iconImg.style.objectFit = 'cover';
+      // 创建基于ID的数字显示
+      const iconText = document.createElement('span');
+      iconText.textContent = site.id;
+      iconText.style.display = 'block';
+      iconText.style.width = '100%';
+      iconText.style.textAlign = 'center';
+      iconText.style.lineHeight = '1';
       
-      // 添加错误处理
-      iconImg.onerror = () => {
-        iconImg.style.display = 'none';
-      };
-
       // 创建信息容器
       const infoDiv = document.createElement('div');
       infoDiv.className = 'Site-info';
@@ -200,7 +206,8 @@
       infoDiv.appendChild(nameEl);
       infoDiv.appendChild(tagEl);
       
-      iconDiv.appendChild(iconImg);
+      iconDiv.appendChild(idLabel); // 添加ID标签
+      iconDiv.appendChild(iconText); // 添加数字文本到图标容器
       
       link.appendChild(iconDiv);
       link.appendChild(infoDiv);
@@ -337,29 +344,35 @@
       
       // 应用图标容器样式
       iconDiv.style.flexShrink = '0';
-      iconDiv.style.width = '60px';
+      iconDiv.style.width = '100px';
       iconDiv.style.height = '60px';
       iconDiv.style.marginRight = '1.5rem';
       iconDiv.style.display = 'flex';
+      iconDiv.style.flexDirection = 'column';
       iconDiv.style.alignItems = 'center';
       iconDiv.style.justifyContent = 'center';
+      iconDiv.style.background = '#d4af37'; // 金色背景
+      iconDiv.style.borderRadius = '8px';
+      iconDiv.style.fontWeight = 'bold';
+      iconDiv.style.fontSize = '24px';
+      iconDiv.style.color = '#000'; // 黑色文字
 
-      // 创建图标图片
-      const iconImg = document.createElement('img');
-      iconImg.src = 'https://www.travellings.cn/assets/favicon.png';
-      iconImg.alt = '加载中';
+      // 创建ID标签
+      const idLabel = document.createElement('span');
+      idLabel.textContent = 'ID';
+      idLabel.style.fontSize = '10px';
+      idLabel.style.fontWeight = 'normal';
+      idLabel.style.color = '#000';
+      idLabel.style.lineHeight = '1';
       
-      // 应用图标图片样式
-      iconImg.style.maxWidth = '100%';
-      iconImg.style.maxHeight = '100%';
-      iconImg.style.borderRadius = '8px';
-      iconImg.style.objectFit = 'cover';
+      // 创建基于ID的数字显示
+      const iconText = document.createElement('span');
+      iconText.textContent = '0';
+      iconText.style.display = 'block';
+      iconText.style.width = '100%';
+      iconText.style.textAlign = 'center';
+      iconText.style.lineHeight = '1';
       
-      // 添加错误处理
-      iconImg.onerror = () => {
-        iconImg.style.display = 'none';
-      };
-
       // 创建信息容器
       const infoDiv = document.createElement('div');
       infoDiv.className = 'Site-info';
@@ -399,7 +412,8 @@
       infoDiv.appendChild(nameEl);
       infoDiv.appendChild(tagEl);
       
-      iconDiv.appendChild(iconImg);
+      iconDiv.appendChild(idLabel); // 添加ID标签
+      iconDiv.appendChild(iconText); // 添加数字文本到图标容器
       
       link.appendChild(iconDiv);
       link.appendChild(infoDiv);
@@ -492,12 +506,18 @@
 
   .Site-icon {
     flex-shrink: 0;
-    width: 60px; /* 减小图标尺寸 */
+    width: 100px;
     height: 60px;
     margin-right: 1.5rem;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
+    background: #d4af37; /* 金色背景 */
+    border-radius: 8px;
+    font-weight: bold;
+    font-size: 24px;
+    color: #000; /* 黑色文字 */
   }
 
   .Site-icon img {
@@ -558,8 +578,8 @@
     }
     
     .Site-icon {
-      width: 50px; /* 调整移动端图标尺寸 */
-      height: 50px;
+      width: 100px;
+      height: 60px;
       margin-right: 1rem;
     }
     
