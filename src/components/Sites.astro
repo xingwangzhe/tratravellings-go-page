@@ -1,0 +1,172 @@
+---
+interface Site {
+  id: number;
+  name: string;
+  status: string;
+  url: string;
+  tag: string;
+  failedReason: string | null;
+  lastManualCheck: string | null;
+  icon: string | null;
+}
+
+// 获取单个随机站点
+async function fetchRandomSite(): Promise<any> {
+  try {
+    const res = await fetch("https://api.travellings.cn/random");
+    const data = await res.json();
+    
+    // 检查响应是否成功
+    if (!data.success || !data.data || !Array.isArray(data.data) || data.data.length === 0) {
+      return null;
+    }
+    
+    return data.data[0];
+  } catch (error) {
+    console.error("获取随机站点错误", error);
+    return null;
+  }
+}
+
+// 获取指定数量的随机站点
+async function fetchSites(sitesCount: number): Promise<Site[]> {
+  try {
+    const sites = [];
+    
+    // 并行获取多个随机站点
+    const promises = Array.from({ length: sitesCount }, () => fetchRandomSite());
+    const results = await Promise.all(promises);
+    
+    // 过滤掉获取失败的站点
+    for (const result of results) {
+      if (result) {
+        sites.push({
+          id: result.id,
+          name: result.name || "未知网站",
+          status: result.status || "active",
+          url: result.url,
+          tag: result.tag,
+          failedReason: result.failedReason || null,
+          lastManualCheck: result.lastManualCheck || null,
+          icon: ``
+        });
+      }
+    }
+    
+    return sites;
+  } catch (error) {
+    console.error("获取站点数据失败", error);
+    return [];
+  }
+}
+
+const sites: Site[] = await fetchSites(10); // 获取10个站点作为示例
+---
+
+<div class="Site-list">
+  {sites.map((site) => (
+    <div class="Site-card">
+      <a href={site.url} target="_blank" rel="noopener noreferrer" class="Site-link">
+        <div class="Site-icon">
+          <img src={`https://www.travellings.cn/assets/favicon.png`} alt={site.name} onerror="this.style.display='none'" />
+        </div>
+        <div class="Site-info">
+          <h3 class="Site-name">{site.name}</h3>
+          <p class="Site-tag">{site.tag}</p>
+        </div>
+      </a>
+    </div>
+  ))}
+</div>
+
+<style>
+  .Site-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1rem;
+    padding: 1rem 0;
+  }
+
+  .Site-card {
+    border: 1px solid #eaeaea;
+    border-radius: 8px;
+    overflow: hidden;
+    transition: all 0.2s ease;
+    background: white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  .Site-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+    border-color: #3498db;
+  }
+
+  .Site-link {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    text-decoration: none;
+    color: inherit;
+  }
+
+  .Site-icon {
+    flex-shrink: 0;
+    width: 48px;
+    height: 48px;
+    margin-right: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .Site-icon img {
+    max-width: 100%;
+    max-height: 100%;
+    border-radius: 4px;
+  }
+
+  .Site-info {
+    flex-grow: 1;
+    min-width: 0;
+  }
+
+  .Site-name {
+    margin: 0 0 0.25rem 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #333;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .Site-tag {
+    margin: 0;
+    font-size: 0.85rem;
+    color: #666;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  @media (max-width: 768px) {
+    .Site-list {
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 0.75rem;
+    }
+    
+    .Site-link {
+      padding: 0.75rem;
+    }
+    
+    .Site-icon {
+      width: 40px;
+      height: 40px;
+    }
+    
+    .Site-name {
+      font-size: 1rem;
+    }
+  }
+</style>
