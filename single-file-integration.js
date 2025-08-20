@@ -39,12 +39,12 @@ export default function singleFileIntegration() {
                         htmlContent = htmlContent.replace(cssRegex, `<style>${cssContent}</style>`);
                     }
                     
-                    // 替换JS链接为内联脚本
+                    // 处理JS文件 - 内联所有JS文件
                     for (const jsFile of jsFiles) {
                         const jsContent = fs.readFileSync(jsFile, 'utf8');
                         const jsFileName = path.basename(jsFile);
                         const jsRegex = new RegExp(`<script[^>]*src="[^"]*${jsFileName}"[^>]*></script>`, 'g');
-                        htmlContent = htmlContent.replace(jsRegex, `<script>${jsContent}</script>`);
+                        htmlContent = htmlContent.replace(jsRegex, `<script type="module">${jsContent}</script>`);
                     }
                     
                     // 替换SVG引用为data URI
@@ -63,7 +63,7 @@ export default function singleFileIntegration() {
                             keepClosingSlash: true,
                             removeComments: true,
                             removeRedundantAttributes: true,
-                            removeScriptTypeAttributes: true,
+                            removeScriptTypeAttributes: false, // 保持type属性
                             removeStyleLinkTypeAttributes: true,
                             useShortDoctype: true,
                             minifyCSS: true,
@@ -83,17 +83,37 @@ export default function singleFileIntegration() {
                             .trim();
                     }
                     
+                    // 确保目标目录存在
+                    const outputDir = path.dirname(htmlFile);
+                    if (!fs.existsSync(outputDir)) {
+                        fs.mkdirSync(outputDir, { recursive: true });
+                    }
+
                     // 写入处理后的HTML文件
-                    const newHtmlFilePath = path.join(path.dirname(htmlFile), 'train-star.html');
+                    const newHtmlFilePath = path.join(outputDir, 'train-star.html');
                     fs.writeFileSync(newHtmlFilePath, finalHtml);
-                    
-                    // 删除原始HTML文件
-                    fs.unlinkSync(htmlFile);
+
+                    // 创建index.html副本以支持preview命令
+                    const indexHtmlFilePath = path.join(outputDir, 'index.html');
+                    fs.writeFileSync(indexHtmlFilePath, finalHtml);
+
+                    // 如果原始HTML文件不是我们刚创建的文件，则删除
+                    const originalFileName = path.basename(htmlFile);
+                    if (originalFileName !== 'train-star.html' && originalFileName !== 'index.html') {
+                        fs.unlinkSync(htmlFile);
+                    }
                 }
                 
-                // 删除已内联的CSS、JS和SVG文件
-                [...cssFiles, ...jsFiles, ...svgFiles].forEach(file => {
-                    fs.unlinkSync(file);
+                // 删除已内联的CSS、JS和SVG文件，但不删除我们创建的文件
+                const filesToDelete = [...cssFiles, ...jsFiles, ...svgFiles].filter(file => {
+                    const fileName = path.basename(file);
+                    return fileName !== 'train-star.html' && fileName !== 'index.html';
+                });
+                
+                filesToDelete.forEach(file => {
+                    if (fs.existsSync(file)) {
+                        fs.unlinkSync(file);
+                    }
                 });
                 
                 // 删除空目录

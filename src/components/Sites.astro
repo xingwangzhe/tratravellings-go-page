@@ -1,105 +1,226 @@
----
-interface Site {
-  id: number;
-  name: string;
-  status: string;
-  url: string;
-  tag: string;
-  failedReason: string | null;
-  lastManualCheck: string | null;
-  icon: string | null;
-}
-
-// 获取单个随机站点
-async function fetchRandomSite(): Promise<any> {
-  try {
-    const res = await fetch("https://api.travellings.cn/random");
-    const data = await res.json();
-    
-    // 检查响应是否成功
-    if (!data.success || !data.data || !Array.isArray(data.data) || data.data.length === 0) {
-      return null;
-    }
-    
-    return data.data[0];
-  } catch (error) {
-    console.error("获取随机站点错误", error);
-    return null;
-  }
-}
-
-// 获取指定数量的随机站点
-async function fetchSites(sitesCount: number): Promise<Site[]> {
-  try {
-    const sites = [];
-    
-    // 并行获取多个随机站点
-    const promises = Array.from({ length: sitesCount }, () => fetchRandomSite());
-    const results = await Promise.all(promises);
-    
-    // 过滤掉获取失败的站点
-    for (const result of results) {
-      if (result) {
-        sites.push({
-          id: result.id,
-          name: result.name || "未知网站",
-          status: result.status || "active",
-          url: result.url,
-          tag: result.tag,
-          failedReason: result.failedReason || null,
-          lastManualCheck: result.lastManualCheck || null,
-          // 绝不生成 favicon URL，太费性能了
-          icon: ``
-        });
-      }
-    }
-    
-    return sites;
-  } catch (error) {
-    console.error("获取站点数据失败", error);
-    return [];
-  }
-}
-
-const sites: Site[] = await fetchSites(5); // 获取5个站点作为示例
----
-
 <div class="Site-container">
   <div class="Site-list-wrapper">
     <div class="Site-list" data-site-list>
-      <!-- 重复站点列表以实现无缝循环 -->
-      {Array.from({ length: 3 }, () => sites).flat().map((site, index) => (
-        <div class="Site-card">
-          <a href={site.url} target="_blank" rel="noopener noreferrer" class="Site-link">
-            <div class="Site-icon">
-              {/* // 绝不生成 favicon URL，太费性能了 */}
-              <img src={'https://www.travellings.cn/assets/favicon.png'} alt={site.name} onerror="this.style.display='none'" />
-            </div>
-            <div class="Site-info">
-              <h3 class="Site-name">{site.name}</h3>
-              <p class="Site-tag">{site.tag}</p>
-            </div>
-          </a>
-        </div>
-      ))}
+      <!-- 初始加载状态 -->
+
     </div>
   </div>
-  <div class="Site-notice" id="site-notice">您将要前往的站点是...</div>
+  <div class="Site-notice" id="site-notice">正在加载站点...</div>
 </div>
 
 <script type="module">
   import { animate } from 'https://cdn.jsdelivr.net/npm/animejs/+esm';
 
-  document.addEventListener("DOMContentLoaded", () => {
-    const siteListElement = document.querySelector("[data-site-list]") ;
+  // 获取所有站点数据
+  async function fetchAllSites() {
+    try {
+      const res = await fetch("https://backup.api.travellings.cn/list.json");
+      const data = await res.json();
+      
+      // 检查响应是否成功
+      if (!data.success || !data.data || !Array.isArray(data.data) || data.data.length === 0) {
+        return [];
+      }
+      
+      return data.data;
+    } catch (error) {
+      console.error("获取站点列表错误", error);
+      return [];
+    }
+  }
+
+  // 从站点列表中随机选择指定数量的站点
+  function getRandomSites(sites, count) {
+    // 创建一个副本以避免修改原始数组
+    const sitesCopy = [...sites];
+    
+    // Fisher-Yates 洗牌算法随机打乱数组
+    for (let i = sitesCopy.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [sitesCopy[i], sitesCopy[j]] = [sitesCopy[j], sitesCopy[i]];
+    }
+    
+    // 返回前count个站点
+    return sitesCopy.slice(0, count);
+  }
+
+  // 获取指定数量的随机站点
+  async function fetchSites(sitesCount) {
+    try {
+      // 获取所有站点
+      const allSites = await fetchAllSites();
+      
+      if (allSites.length === 0) {
+        return [];
+      }
+      
+      // 从所有站点中随机选择指定数量的站点
+      const randomSites = getRandomSites(allSites, sitesCount);
+      
+      // 处理站点数据
+      const sites = randomSites.map(site => ({
+        id: site.id,
+        name: site.name || "未知网站",
+        status: site.status || "active",
+        url: site.url,
+        tag: site.tag,
+        failedReason: site.failedReason || null,
+        lastManualCheck: site.lastManualCheck || null,
+        // 绝不生成 favicon URL，太费性能了
+        icon: ``
+      }));
+      
+      return sites;
+    } catch (error) {
+      console.error("获取站点数据失败", error);
+      return [];
+    }
+  }
+
+  // 渲染站点列表
+  function renderSites(sites) {
+    const siteListElement = document.querySelector("[data-site-list]");
+    if (!siteListElement) return;
+
+    // 清空现有内容
+    siteListElement.innerHTML = '';
+
+    // 重复站点列表以实现无缝循环
+    const repeatedSites = Array.from({ length: 3 }, () => sites).flat();
+    
+    repeatedSites.forEach((site) => {
+      // 创建站点卡片容器
+      const card = document.createElement('div');
+      card.className = 'Site-card';
+      
+      // 应用样式
+      card.style.border = '1px solid #333';
+      card.style.borderRadius = '16px';
+      card.style.overflow = 'hidden';
+      card.style.transition = 'all 0.3s ease';
+      card.style.background = '#1e1e1e';
+      card.style.boxShadow = '0 6px 12px rgba(0, 0, 0, 0.3)';
+      card.style.minWidth = '300px';
+      card.style.flexShrink = '0';
+      card.style.willChange = 'transform';
+      
+      // 添加悬停效果
+      card.addEventListener('mouseenter', () => {
+        card.style.transform = 'translateY(-8px)';
+        card.style.boxShadow = '0 16px 32px rgba(0, 0, 0, 0.5)';
+        card.style.borderColor = '#3498db';
+      });
+      
+      card.addEventListener('mouseleave', () => {
+        card.style.transform = 'translateY(0)';
+        card.style.boxShadow = '0 6px 12px rgba(0, 0, 0, 0.3)';
+        card.style.borderColor = '#333';
+      });
+
+      // 创建链接元素
+      const link = document.createElement('a');
+      link.href = site.url;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      link.className = 'Site-link';
+      
+      // 应用链接样式
+      link.style.display = 'flex';
+      link.style.alignItems = 'center';
+      link.style.padding = '1.5rem';
+      link.style.textDecoration = 'none';
+      link.style.color = '#e0e0e0';
+      link.style.height = '100%';
+
+      // 创建图标容器
+      const iconDiv = document.createElement('div');
+      iconDiv.className = 'Site-icon';
+      
+      // 应用图标容器样式
+      iconDiv.style.flexShrink = '0';
+      iconDiv.style.width = '60px';
+      iconDiv.style.height = '60px';
+      iconDiv.style.marginRight = '1.5rem';
+      iconDiv.style.display = 'flex';
+      iconDiv.style.alignItems = 'center';
+      iconDiv.style.justifyContent = 'center';
+
+      // 创建图标图片
+      const iconImg = document.createElement('img');
+      iconImg.src = 'https://www.travellings.cn/assets/favicon.png';
+      iconImg.alt = site.name;
+      
+      // 应用图标图片样式
+      iconImg.style.maxWidth = '100%';
+      iconImg.style.maxHeight = '100%';
+      iconImg.style.borderRadius = '8px';
+      iconImg.style.objectFit = 'cover';
+      
+      // 添加错误处理
+      iconImg.onerror = () => {
+        iconImg.style.display = 'none';
+      };
+
+      // 创建信息容器
+      const infoDiv = document.createElement('div');
+      infoDiv.className = 'Site-info';
+      
+      // 应用信息容器样式
+      infoDiv.style.flexGrow = '1';
+      infoDiv.style.minWidth = '0';
+
+      // 创建站点名称
+      const nameEl = document.createElement('h3');
+      nameEl.className = 'Site-name';
+      nameEl.textContent = site.name;
+      
+      // 应用站点名称样式
+      nameEl.style.margin = '0 0 0.5rem 0';
+      nameEl.style.fontSize = '1.3rem';
+      nameEl.style.fontWeight = '600';
+      nameEl.style.color = '#e0e0e0';
+      nameEl.style.whiteSpace = 'nowrap';
+      nameEl.style.overflow = 'hidden';
+      nameEl.style.textOverflow = 'ellipsis';
+
+      // 创建站点标签
+      const tagEl = document.createElement('p');
+      tagEl.className = 'Site-tag';
+      tagEl.textContent = site.tag;
+      
+      // 应用站点标签样式
+      tagEl.style.margin = '0';
+      tagEl.style.fontSize = '1rem';
+      tagEl.style.color = '#aaa';
+      tagEl.style.whiteSpace = 'nowrap';
+      tagEl.style.overflow = 'hidden';
+      tagEl.style.textOverflow = 'ellipsis';
+
+      // 组装元素
+      infoDiv.appendChild(nameEl);
+      infoDiv.appendChild(tagEl);
+      
+      iconDiv.appendChild(iconImg);
+      
+      link.appendChild(iconDiv);
+      link.appendChild(infoDiv);
+      
+      card.appendChild(link);
+      
+      siteListElement.appendChild(card);
+    });
+
+    // 启动动画
+    initAnimation(sites.length);
+  }
+
+  // 初始化动画
+  function initAnimation(sitesCount) {
+    const siteListElement = document.querySelector("[data-site-list]");
     const siteNoticeElement = document.getElementById("site-notice");
     if (!siteListElement || !siteNoticeElement) return;
 
-    // 获取站点数量（从DOM元素计算）
-    const siteCards = siteListElement.querySelectorAll(".Site-card");
-    const sitesCount = siteCards.length / 3; // 除以3是因为我们重复了3次列表
-
-    // 获取单个卡片的宽度（包括margin）
+    // 获取卡片的宽度（包括margin）
     const cardWidth = 350 + 32; // 卡片宽度350px + 间距32px
     
     // 计算一组卡片的总宽度
@@ -111,7 +232,6 @@ const sites: Site[] = await fetchSites(5); // 获取5个站点作为示例
     siteListElement.style.position = "absolute";
     siteListElement.style.left = "0";
     siteListElement.style.width = "fit-content";
-    siteListElement.style.flexWrap = "nowrap";
 
     // 执行动画 - 5秒完成一轮
     const animation = animate("[data-site-list]", {
@@ -148,7 +268,6 @@ const sites: Site[] = await fetchSites(5); // 获取5个站点作为示例
         
         // 获取站点名称并更新提示文字
         const siteName = closestLink?.querySelector(".Site-name")?.textContent;
-        const siteNoticeElement = document.getElementById("site-notice");
         if (siteNoticeElement) {
           siteNoticeElement.textContent = `您将要前往的站点是: ${siteName}`;
         }
@@ -159,6 +278,159 @@ const sites: Site[] = await fetchSites(5); // 获取5个站点作为示例
         }, 500);
       }
     }, 5000);
+  }
+
+  // 页面加载完成后获取站点数据
+  document.addEventListener("DOMContentLoaded", async () => {
+    // 显示加载状态
+    const siteListElement = document.querySelector("[data-site-list]");
+    const siteNoticeElement = document.getElementById("site-notice");
+    
+    if (siteNoticeElement) {
+      siteNoticeElement.textContent = "正在加载站点...";
+      // 应用样式
+      siteNoticeElement.style.position = "absolute";
+      siteNoticeElement.style.bottom = "0";
+      siteNoticeElement.style.left = "0";
+      siteNoticeElement.style.width = "100%";
+      siteNoticeElement.style.textAlign = "center";
+      siteNoticeElement.style.fontSize = "1.1rem";
+      siteNoticeElement.style.color = "#e0e0e0";
+      siteNoticeElement.style.padding = "0.8rem";
+      siteNoticeElement.style.background = "rgba(30, 30, 30, 0)";
+      siteNoticeElement.style.backdropFilter = "blur(5px)";
+      siteNoticeElement.style.zIndex = "10";
+    }
+    
+    // 显示初始加载状态
+    if (siteListElement) {
+      // 创建初始卡片
+      const card = document.createElement('div');
+      card.className = 'Site-card';
+      
+      // 应用样式
+      card.style.border = '1px solid #333';
+      card.style.borderRadius = '16px';
+      card.style.overflow = 'hidden';
+      card.style.transition = 'all 0.3s ease';
+      card.style.background = '#1e1e1e';
+      card.style.boxShadow = '0 6px 12px rgba(0, 0, 0, 0.3)';
+      card.style.minWidth = '300px';
+      card.style.flexShrink = '0';
+      card.style.willChange = 'transform';
+
+      // 创建链接元素
+      const link = document.createElement('div');
+      link.className = 'Site-link';
+      
+      // 应用链接样式
+      link.style.display = 'flex';
+      link.style.alignItems = 'center';
+      link.style.padding = '1.5rem';
+      link.style.textDecoration = 'none';
+      link.style.color = '#e0e0e0';
+      link.style.height = '100%';
+
+      // 创建图标容器
+      const iconDiv = document.createElement('div');
+      iconDiv.className = 'Site-icon';
+      
+      // 应用图标容器样式
+      iconDiv.style.flexShrink = '0';
+      iconDiv.style.width = '60px';
+      iconDiv.style.height = '60px';
+      iconDiv.style.marginRight = '1.5rem';
+      iconDiv.style.display = 'flex';
+      iconDiv.style.alignItems = 'center';
+      iconDiv.style.justifyContent = 'center';
+
+      // 创建图标图片
+      const iconImg = document.createElement('img');
+      iconImg.src = 'https://www.travellings.cn/assets/favicon.png';
+      iconImg.alt = '加载中';
+      
+      // 应用图标图片样式
+      iconImg.style.maxWidth = '100%';
+      iconImg.style.maxHeight = '100%';
+      iconImg.style.borderRadius = '8px';
+      iconImg.style.objectFit = 'cover';
+      
+      // 添加错误处理
+      iconImg.onerror = () => {
+        iconImg.style.display = 'none';
+      };
+
+      // 创建信息容器
+      const infoDiv = document.createElement('div');
+      infoDiv.className = 'Site-info';
+      
+      // 应用信息容器样式
+      infoDiv.style.flexGrow = '1';
+      infoDiv.style.minWidth = '0';
+
+      // 创建站点名称
+      const nameEl = document.createElement('h3');
+      nameEl.className = 'Site-name';
+      nameEl.textContent = '加载中...';
+      
+      // 应用站点名称样式
+      nameEl.style.margin = '0 0 0.5rem 0';
+      nameEl.style.fontSize = '1.3rem';
+      nameEl.style.fontWeight = '600';
+      nameEl.style.color = '#e0e0e0';
+      nameEl.style.whiteSpace = 'nowrap';
+      nameEl.style.overflow = 'hidden';
+      nameEl.style.textOverflow = 'ellipsis';
+
+      // 创建站点标签
+      const tagEl = document.createElement('p');
+      tagEl.className = 'Site-tag';
+      tagEl.textContent = '正在获取站点';
+      
+      // 应用站点标签样式
+      tagEl.style.margin = '0';
+      tagEl.style.fontSize = '1rem';
+      tagEl.style.color = '#aaa';
+      tagEl.style.whiteSpace = 'nowrap';
+      tagEl.style.overflow = 'hidden';
+      tagEl.style.textOverflow = 'ellipsis';
+
+      // 组装元素
+      infoDiv.appendChild(nameEl);
+      infoDiv.appendChild(tagEl);
+      
+      iconDiv.appendChild(iconImg);
+      
+      link.appendChild(iconDiv);
+      link.appendChild(infoDiv);
+      
+      card.appendChild(link);
+      
+      siteListElement.appendChild(card);
+    }
+
+    // 获取站点数据
+    const sites = await fetchSites(5);
+    
+    if (sites.length > 0) {
+      // 渲染站点
+      renderSites(sites);
+    } else {
+      // 处理获取失败的情况
+      if (siteNoticeElement) {
+        siteNoticeElement.textContent = "加载站点失败，请刷新页面重试";
+      }
+      
+      // 更新初始卡片内容显示错误信息
+      if (siteListElement && siteListElement.firstChild) {
+        const card = siteListElement.firstChild;
+        const nameEl = card.querySelector('.Site-name');
+        const tagEl = card.querySelector('.Site-tag');
+        
+        if (nameEl) nameEl.textContent = '加载失败';
+        if (tagEl) tagEl.textContent = '请刷新页面重试';
+      }
+    }
   });
 </script>
 
@@ -167,8 +439,8 @@ const sites: Site[] = await fetchSites(5); // 获取5个站点作为示例
     overflow: hidden;
     position: relative;
     width: 100%;
-    height: 250px; /* 减小高度以适应首屏显示 */
-    margin: 2rem 0;
+    height: 200px; /* 减小高度以适应首屏显示 */
+    margin: 1rem 0;
     flex-grow: 1;
   }
 
@@ -198,7 +470,7 @@ const sites: Site[] = await fetchSites(5); // 获取5个站点作为示例
     transition: all 0.3s ease;
     background: #1e1e1e;
     box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
-    min-width: 350px;
+    min-width: 300px; /* 减小最小宽度 */
     flex-shrink: 0;
     will-change: transform;
   }
@@ -212,7 +484,7 @@ const sites: Site[] = await fetchSites(5); // 获取5个站点作为示例
   .Site-link {
     display: flex;
     align-items: center;
-    padding: 2rem;
+    padding: 1.5rem; /* 减小内边距 */
     text-decoration: none;
     color: #e0e0e0;
     height: 100%;
@@ -220,9 +492,9 @@ const sites: Site[] = await fetchSites(5); // 获取5个站点作为示例
 
   .Site-icon {
     flex-shrink: 0;
-    width: 72px;
-    height: 72px;
-    margin-right: 2rem;
+    width: 60px; /* 减小图标尺寸 */
+    height: 60px;
+    margin-right: 1.5rem;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -240,8 +512,8 @@ const sites: Site[] = await fetchSites(5); // 获取5个站点作为示例
   }
 
   .Site-name {
-    margin: 0 0 0.75rem 0;
-    font-size: 1.5rem;
+    margin: 0 0 0.5rem 0; /* 减小间距 */
+    font-size: 1.3rem; /* 调整字体大小 */
     font-weight: 600;
     color: #e0e0e0;
     white-space: nowrap;
@@ -251,7 +523,7 @@ const sites: Site[] = await fetchSites(5); // 获取5个站点作为示例
 
   .Site-tag {
     margin: 0;
-    font-size: 1.1rem;
+    font-size: 1rem; /* 调整字体大小 */
     color: #aaa;
     white-space: nowrap;
     overflow: hidden;
@@ -264,9 +536,9 @@ const sites: Site[] = await fetchSites(5); // 获取5个站点作为示例
     left: 0;
     width: 100%;
     text-align: center;
-    font-size: 1.2rem;
+    font-size: 1.1rem; /* 调整字体大小 */
     color: #e0e0e0;
-    padding: 1rem;
+    padding: 0.8rem; /* 调整内边距 */
     background: rgba(30, 30, 30, 0);
     backdrop-filter: blur(5px);
     z-index: 10;
@@ -274,33 +546,33 @@ const sites: Site[] = await fetchSites(5); // 获取5个站点作为示例
 
   @media (max-width: 768px) {
     .Site-container {
-      height: 200px; /* 调整移动端高度 */
+      height: 180px; /* 调整移动端高度 */
     }
     
     .Site-card {
-      min-width: 280px;
+      min-width: 250px; /* 调整移动端最小宽度 */
     }
     
     .Site-link {
-      padding: 1.5rem;
+      padding: 1rem; /* 调整移动端内边距 */
     }
     
     .Site-icon {
-      width: 60px;
-      height: 60px;
-      margin-right: 1.5rem;
+      width: 50px; /* 调整移动端图标尺寸 */
+      height: 50px;
+      margin-right: 1rem;
     }
     
     .Site-name {
-      font-size: 1.3rem;
+      font-size: 1.1rem; /* 调整移动端字体大小 */
     }
     
     .Site-tag {
-      font-size: 1rem;
+      font-size: 0.9rem; /* 调整移动端字体大小 */
     }
     
     .Site-notice {
-      font-size: 1rem;
+      font-size: 0.9rem; /* 调整移动端字体大小 */
       padding: 0.5rem;
     }
   }
