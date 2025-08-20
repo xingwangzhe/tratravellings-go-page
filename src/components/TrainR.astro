@@ -76,14 +76,14 @@ const { direction = "toRight", carCount = 20 } = Astro.props;
         trainElement.style.left = `-${totalWidth}px`;
         animate("#trainR", {
           left: "100%",
-          duration: 10000,
+          duration: 5000, // 修改为5秒
           easing: "easeOutCubic",
         });
       } else {
         trainElement.style.left = "100%";
         animate("#trainR", {
           left: `-${totalWidth}px`,
-          duration: 10000,
+          duration: 5000, // 修改为5秒
           easing: "easeOutCubic",
         });
       }

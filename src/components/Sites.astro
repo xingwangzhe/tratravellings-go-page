@@ -61,12 +61,12 @@ async function fetchSites(sitesCount: number): Promise<Site[]> {
   }
 }
 
-const sites: Site[] = await fetchSites(10); // 获取10个站点作为示例
+const sites: Site[] = await fetchSites(5); // 获取5个站点作为示例
 ---
 
 <div class="Site-container">
   <div class="Site-list-wrapper">
-    <div class="Site-list">
+    <div class="Site-list" data-site-list>
       <!-- 重复站点列表以实现无缝循环 -->
       {Array.from({ length: 3 }, () => sites).flat().map((site, index) => (
         <div class="Site-card">
@@ -84,32 +84,81 @@ const sites: Site[] = await fetchSites(10); // 获取10个站点作为示例
       ))}
     </div>
   </div>
+  <div class="Site-notice" id="site-notice">您将要前往的站点是...</div>
 </div>
 
 <script>
   import { animate } from "animejs";
 
   document.addEventListener("DOMContentLoaded", () => {
-    const siteListElement = document.querySelector(".Site-list") as HTMLElement | null;
-    if (!siteListElement) return;
+    const siteListElement = document.querySelector("[data-site-list]") as HTMLElement | null;
+    const siteNoticeElement = document.getElementById("site-notice");
+    if (!siteListElement || !siteNoticeElement) return;
 
     // 获取站点数量（从DOM元素计算）
     const siteCards = siteListElement.querySelectorAll(".Site-card");
     const sitesCount = siteCards.length / 3; // 除以3是因为我们重复了3次列表
 
     // 获取单个卡片的宽度（包括margin）
-    const cardWidth = 300 + 24; // 卡片宽度300px + 间距24px
+    const cardWidth = 350 + 32; // 卡片宽度350px + 间距32px
     
     // 计算一组卡片的总宽度
     const setWidth = sitesCount * cardWidth;
 
-    // 执行动画
-    animate(".Site-list", {
-      translateX: -setWidth,
-      duration: 15000,
+    // 设置初始样式
+    siteListElement.style.display = "flex";
+    siteListElement.style.alignItems = "center";
+    siteListElement.style.position = "absolute";
+    siteListElement.style.left = "0";
+    siteListElement.style.width = "fit-content";
+    siteListElement.style.flexWrap = "nowrap";
+
+    // 执行动画 - 5秒完成一轮
+    const animation = animate("[data-site-list]", {
+      left: -setWidth + "px",
+      duration: 5000,
       easing: "linear",
       loop: true,
     });
+
+    // 4.5秒后更新提示文字显示实际站点名称
+    setInterval(() => {
+      // 计算屏幕中心位置
+      const container = document.querySelector(".Site-container");
+      const containerRect = container.getBoundingClientRect();
+      const containerCenter = containerRect.left + containerRect.width / 2;
+      
+      // 获取所有站点链接
+      const siteLinks = document.querySelectorAll(".Site-link");
+      if (siteLinks.length > 0) {
+        // 找到离屏幕中心最近的站点
+        let closestLink = siteLinks[0] as HTMLAnchorElement;
+        let closestDistance = Infinity;
+        
+        siteLinks.forEach((link) => {
+          const linkRect = link.getBoundingClientRect();
+          const linkCenter = linkRect.left + linkRect.width / 2;
+          const distance = Math.abs(linkCenter - containerCenter);
+          
+          if (distance < closestDistance) {
+            closestDistance = distance;
+            closestLink = link as HTMLAnchorElement;
+          }
+        });
+        
+        // 获取站点名称并更新提示文字
+        const siteName = closestLink.querySelector(".Site-name").textContent;
+        const siteNoticeElement = document.getElementById("site-notice");
+        if (siteNoticeElement) {
+          siteNoticeElement.textContent = `您将要前往的站点是: ${siteName}`;
+        }
+        
+        // 0.5秒后跳转到屏幕中央的网站
+        setTimeout(() => {
+          window.location.href = closestLink.href;
+        }, 500);
+      }
+    }, 5000);
   });
 </script>
 
@@ -209,6 +258,20 @@ const sites: Site[] = await fetchSites(10); // 获取10个站点作为示例
     text-overflow: ellipsis;
   }
 
+  .Site-notice {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    text-align: center;
+    font-size: 1.2rem;
+    color: #e0e0e0;
+    padding: 1rem;
+    background: rgba(30, 30, 30, 0.8);
+    backdrop-filter: blur(5px);
+    z-index: 10;
+  }
+
   @media (max-width: 768px) {
     .Site-container {
       height: 200px; /* 调整移动端高度 */
@@ -234,6 +297,11 @@ const sites: Site[] = await fetchSites(10); // 获取10个站点作为示例
     
     .Site-tag {
       font-size: 1rem;
+    }
+    
+    .Site-notice {
+      font-size: 1rem;
+      padding: 0.5rem;
     }
   }
 </style>
