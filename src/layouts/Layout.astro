@@ -12,7 +12,9 @@ import Footer from "../components/Footer.astro";
 		<title>开往 - 友链接力</title>
 	</head>
 	<body>
-		<slot />
+		<main>
+			<slot />
+		</main>
 	</body>
 	<Footer />
 </html>
@@ -28,9 +30,13 @@ import Footer from "../components/Footer.astro";
 	
 	body {
 		transition: background-color 0.5s;
+		background: #111111;
+		display: flex;
+		flex-direction: column;
+		min-height: 100vh;
 	}
 	
-		body {
-			background: #111111;
-		}
+	main {
+		flex-grow: 1;
+	}
 </style>

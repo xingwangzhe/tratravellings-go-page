@@ -3,11 +3,29 @@ import Layout from "../layouts/Layout.astro";
 import TrainL from "../components/TrainL.astro";
 import TrainR from "../components/TrainR.astro";
 import Sites from "../components/Sites.astro";
-// 移除重复的页脚引入
 ---
 
 <Layout>
-  <TrainR direction="toRight" carCount={20}/>
-  <Sites/>
-  <TrainL direction="toLeft" carCount={20}/>
+  <div class="main-content">
+    <TrainR direction="toRight" carCount={20}/>
+    <Sites/>
+    <TrainL direction="toLeft" carCount={20}/>
+  </div>
 </Layout>
+
+<style>
+  .main-content {
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 180px); /* 为页脚预留更多空间 */
+    justify-content: space-between;
+    padding: 2rem 0;
+  }
+  
+  @media (max-width: 768px) {
+    .main-content {
+      padding: 1rem 0;
+      height: calc(100vh - 150px); /* 移动端为页脚预留空间 */
+    }
+  }
+</style>
