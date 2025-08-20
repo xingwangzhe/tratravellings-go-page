@@ -27,9 +27,10 @@ const { direction = "toRight", carCount = 20 } = Astro.props;
               width="120"
               height="70"
               alt="车厢"
+              class="train-car"
             />
           ))}
-          <Image src={MingcuteTrainFill} width="120" height="120" alt="车头" />
+          <Image src={MingcuteTrainFill} width="120" height="120" alt="车头" class="train-engine" />
         </>
       ) : (
         <>
@@ -39,6 +40,7 @@ const { direction = "toRight", carCount = 20 } = Astro.props;
             height="120"
             alt="车头"
             style="transform: scaleX(-1);"
+            class="train-engine"
           />
           {Array.from({ length: carCount }).map((_, i) => (
             <Image
@@ -46,6 +48,7 @@ const { direction = "toRight", carCount = 20 } = Astro.props;
               width="120"
               height="70"
               alt="车厢"
+              class="train-car"
             />
           ))}
         </>
@@ -100,6 +103,11 @@ const { direction = "toRight", carCount = 20 } = Astro.props;
     align-items: center;
     position: absolute;
     bottom: 0;
+  }
+
+  .train-car,
+  .train-engine {
+    filter: brightness(0.8) contrast(1.2);
   }
 
   [data-direction="left"] {
