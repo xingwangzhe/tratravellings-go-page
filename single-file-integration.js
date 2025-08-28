@@ -1,5 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
+import { fileURLToPath } from 'url';
 
 export default function singleFileIntegration() {
     return {
@@ -7,7 +8,22 @@ export default function singleFileIntegration() {
         hooks: {
             'astro:build:done': async ({ dir }) => {
                 console.log('开始处理单文件构建...');
-                const folder = dir.pathname;
+                console.log('dir:', dir);
+                console.log('dir.pathname:', dir.pathname);
+                
+                let folder;
+                if (typeof dir === 'string') {
+                    folder = dir;
+                } else if (dir && dir.pathname) {
+                    try {
+                        folder = fileURLToPath(dir.href);
+                    } catch (error) {
+                        console.log('fileURLToPath failed, trying decodeURIComponent:', error.message);
+                        folder = decodeURIComponent(dir.pathname);
+                    }
+                } else {
+                    throw new Error('Unable to determine build directory');
+                }
                 
                 // 读取所有文件
                 const files = getAllFiles(folder);

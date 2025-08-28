@@ -4,13 +4,15 @@
   "version": "0.0.1",
   "scripts": {
     "dev": "astro dev",
-    "build": "astro build",
+    "build": "astro build && bun run format-html",
+    "build:only": "astro build",
+    "format-html": "node format-html.js",
     "preview": "astro preview",
     "astro": "astro"
   },
   "dependencies": {
     "animejs": "^4.1.3",
     "astro": "^5.13.2",
-    "html-minifier-terser": "^7.2.0"
+    "prettier": "^3.6.2"
   }
 }
