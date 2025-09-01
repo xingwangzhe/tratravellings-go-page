@@ -139,34 +139,28 @@
       // 应用图标容器样式
       iconDiv.style.flexShrink = '0';
       iconDiv.style.width = '100px';
-      iconDiv.style.height = '60px';
+      iconDiv.style.height = 'auto'; // 自动高度
       iconDiv.style.marginRight = '1.5rem';
       iconDiv.style.display = 'flex';
       iconDiv.style.flexDirection = 'column';
       iconDiv.style.alignItems = 'center';
       iconDiv.style.justifyContent = 'center';
-      iconDiv.style.background = '#4CAF50'; // 使用绿色替代金色
-      iconDiv.style.borderRadius = '8px';
-      iconDiv.style.fontWeight = 'bold';
-      iconDiv.style.fontSize = '24px';
-      iconDiv.style.color = '#fff'; // 白色文字
 
-      // 创建ID标签
-      const idLabel = document.createElement('span');
-      idLabel.textContent = 'ID';
-      idLabel.style.fontSize = '10px';
-      idLabel.style.fontWeight = 'normal';
-      idLabel.style.color = '#fff';
-      idLabel.style.lineHeight = '1';
+      // 创建图片
+      const iconImg = document.createElement('img');
+      iconImg.src = 'https://www.travellings.cn/assets/favicon.png';
+      iconImg.alt = site.name + ' icon';
+      iconImg.style.width = '48px';
+      iconImg.style.height = '48px';
+      iconImg.style.borderRadius = '8px';
       
-      // 创建基于ID的数字显示
-      const iconText = document.createElement('span');
-      iconText.textContent = site.id;
-      iconText.style.display = 'block';
-      iconText.style.width = '100%';
-      iconText.style.textAlign = 'center';
-      iconText.style.lineHeight = '1';
-      
+      // 创建ID文本
+      const idText = document.createElement('span');
+      idText.textContent = `ID: ${site.id}`;
+      idText.style.fontSize = '12px';
+      idText.style.color = '#aaa';
+      idText.style.marginTop = '8px';
+
       // 创建信息容器
       const infoDiv = document.createElement('div');
       infoDiv.className = 'Site-info';
@@ -206,8 +200,8 @@
       infoDiv.appendChild(nameEl);
       infoDiv.appendChild(tagEl);
       
-      iconDiv.appendChild(idLabel); // 添加ID标签
-      iconDiv.appendChild(iconText); // 添加数字文本到图标容器
+      iconDiv.appendChild(iconImg);
+      iconDiv.appendChild(idText);
       
       link.appendChild(iconDiv);
       link.appendChild(infoDiv);
