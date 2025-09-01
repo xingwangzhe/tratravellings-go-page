@@ -211,8 +211,27 @@ export default function singleFileIntegration() {
                     }
                 });
                 
-                // 可选：保留SVG文件，因为它们可能在其他地方被引用
-                console.log('保留SVG文件以备后用');
+                // 删除_astro目录
+                const astroDir = path.join(folder, '_astro');
+                if (fs.existsSync(astroDir)) {
+                    try {
+                        fs.rmSync(astroDir, { recursive: true, force: true });
+                        console.log('删除_astro目录');
+                    } catch (error) {
+                        console.warn('删除_astro目录失败:', error.message);
+                    }
+                }
+                
+                // 删除favicon.svg文件
+                const faviconPath = path.join(folder, 'favicon.svg');
+                if (fs.existsSync(faviconPath)) {
+                    try {
+                        fs.unlinkSync(faviconPath);
+                        console.log('删除favicon.svg文件');
+                    } catch (error) {
+                        console.warn('删除favicon.svg文件失败:', error.message);
+                    }
+                }
                 
                 // 删除空目录（但要小心不要删除重要目录）
                 try {
